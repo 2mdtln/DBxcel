@@ -5,11 +5,17 @@ from openpyxl import Workbook
 import json
 import os
 import webbrowser
-
+import requests
 
 class ExportApp:
     def __init__(self, root):
         self.root = root
+        self.root.withdraw()
+        if self.check_for_updates():
+            self.root.destroy()
+            return
+        self.root.deiconify()
+
         self.root.title("Veritabanını Excel'e Aktar")
         self.load_last_used_params()
         self.last_db_label = tk.Label(root, text=f"Son kullanılan DB: {self.last_db if self.last_db else 'Yok'}")
@@ -31,21 +37,28 @@ class ExportApp:
         self.export_button = tk.Button(button_frame, text="Excel'e Aktar", command=self.export_to_excel)
         self.export_button.pack(side=tk.LEFT, padx=10)
 
-        self.github_credit_1 = tk.Label(root, text="@2mdtln", fg="blue", cursor="hand2")
-        self.github_credit_1.pack()
+        self.credit_label = tk.Label(root, text="ASAL Kütüphanesi için yapılmıştır - Şubat 2025", fg="black", font=("Helvetica", 10, "bold"))
+        self.credit_label.pack()
+
+        github_frame = tk.Frame(root)
+        github_frame.pack()
+
+        self.github_credit_1 = tk.Label(github_frame, text="@2mdtln", fg="blue", cursor="hand2")
+        self.github_credit_1.pack(side=tk.LEFT, padx=5)
         self.github_credit_1.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/2mdtln"))
 
-        self.github_credit_2 = tk.Label(root, text="@Restilov", fg="blue", cursor="hand2")
-        self.github_credit_2.pack()
+        self.github_credit_2 = tk.Label(github_frame, text="@Restilov", fg="blue", cursor="hand2")
+        self.github_credit_2.pack(side=tk.LEFT, padx=5)
         self.github_credit_2.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/Restilov"))
 
-        self.credit_label = tk.Label(root, text="Asal için yapılmıştır", fg="black", font=("Helvetica", 10, "bold"))
-        self.credit_label.pack()
+        self.version_label = tk.Label(root, text="v1.0.1", fg="black", font=("Helvetica", 8))
+        self.version_label.pack()
 
         self.db_file = self.last_db
         self.table_name = self.last_table
 
-        self.root.geometry("350x220")
+        self.root.geometry("350x150")
+        self.root.resizable(False, False)
 
     def load_last_used_params(self):
         if os.path.exists("params.json"):
@@ -125,6 +138,26 @@ class ExportApp:
             messagebox.showerror("Hata", f"Bir hata oluştu: {e}")
         finally:
             conn.close()
+
+    def check_for_updates(self):
+        current_version = "v1.0.1"
+        repo_url = "https://api.github.com/repos/2mdtln/DBxcel/releases/latest"
+        update_found = False
+        try:
+            response = requests.get(repo_url)
+            if response.status_code == 200:
+                latest_release = response.json()
+                latest_version = latest_release['tag_name']
+
+                if latest_version != current_version:
+                    update_msg = f"Yeni bir sürüm mevcut: {latest_version}. Güncellemek ister misiniz?"
+                    if messagebox.askyesno("Güncelleme Bulundu", update_msg):
+                        webbrowser.open(latest_release['html_url'])
+                    update_found = True
+        except Exception as e:
+            print(f"Update check failed: {e}")
+        
+        return update_found
 
 if __name__ == "__main__":
     root = tk.Tk()
