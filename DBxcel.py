@@ -98,7 +98,7 @@ class ExportApp:
         self.table_name = self.table_entry.get()
 
         if not self.db_file or self.table_name == "Tablo adını girin":
-            messagebox.showerror("Hata", "Lütfen bir veritabanı seçin ve tablo adını girin.")
+            messagebox.showerror("Sen de benim hatalarımdan birisin", "Lütfen bir veritabanı seçin ve tablo adını girin.")
             return
 
         save_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Dosyası", "*.xlsx")])
@@ -135,7 +135,7 @@ class ExportApp:
             self.save_last_used_params()
 
         except Exception as e:
-            messagebox.showerror("Hata", f"Bir hata oluştu: {e}")
+            messagebox.showerror("Sen de benim hatalarımdan birisin", f"Bir hata oluştu: {e}")
         finally:
             conn.close()
 
