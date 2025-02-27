@@ -6,13 +6,24 @@ import json
 import os
 import webbrowser
 import requests
+import subprocess
+import sys
+
+def install_libraries():
+    libraries = ["openpyxl", "requests"]
+    for lib in libraries:
+        try:
+            __import__(lib)
+        except ImportError:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
+
+install_libraries()
 
 class ExportApp:
     def __init__(self, root):
         self.root = root
         self.root.withdraw()
         if self.check_for_updates():
-            self.root.destroy()
             return
         self.root.deiconify()
 
@@ -26,6 +37,8 @@ class ExportApp:
 
         self.table_entry = tk.Entry(root)
         self.table_entry.insert(0, self.last_table if self.last_table else "Tablo adını girin")
+        self.table_entry.bind("<FocusIn>", self.clear_placeholder)
+        self.table_entry.bind("<FocusOut>", self.restore_placeholder)
         self.table_entry.pack()
 
         button_frame = tk.Frame(root)
@@ -51,7 +64,7 @@ class ExportApp:
         self.github_credit_2.pack(side=tk.LEFT, padx=5)
         self.github_credit_2.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/Restilov"))
 
-        self.version_label = tk.Label(root, text="v1.0.1", fg="black", font=("Helvetica", 8))
+        self.version_label = tk.Label(root, text="v1.0.2", fg="black", font=("Helvetica", 8))
         self.version_label.pack()
 
         self.db_file = self.last_db
@@ -59,6 +72,14 @@ class ExportApp:
 
         self.root.geometry("350x150")
         self.root.resizable(False, False)
+
+    def clear_placeholder(self, event):
+        if self.table_entry.get() == "Tablo adını girin":
+            self.table_entry.delete(0, tk.END)
+
+    def restore_placeholder(self, event):
+        if not self.table_entry.get():
+            self.table_entry.insert(0, "Tablo adını girin")
 
     def load_last_used_params(self):
         if os.path.exists("params.json"):
@@ -96,30 +117,23 @@ class ExportApp:
 
     def export_to_excel(self):
         self.table_name = self.table_entry.get()
-
         if not self.db_file or self.table_name == "Tablo adını girin":
-            messagebox.showerror("Sen de benim hatalarımdan birisin", "Lütfen bir veritabanı seçin ve tablo adını girin.")
+            messagebox.showerror("Hata", "Lütfen bir veritabanı seçin ve tablo adını girin.")
             return
-
         save_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Dosyası", "*.xlsx")])
         if not save_path:
             return
-
         try:
             conn = sqlite3.connect(self.db_file)
             cursor = conn.cursor()
-
             cursor.execute(f"SELECT * FROM {self.table_name}")
             rows = cursor.fetchall()
             columns = [description[0] for description in cursor.description]
-
             wb = Workbook()
             ws = wb.active
             ws.title = "Sheet1"
-
             for col_num, column in enumerate(columns, 1):
                 ws.cell(row=1, column=col_num, value=column)
-
             for row_num, row in enumerate(rows, 2):
                 for col_num, value in enumerate(row, 1):
                     if isinstance(value, bytes):
@@ -128,36 +142,30 @@ class ExportApp:
                         except UnicodeDecodeError:
                             value = "<Binary Veri>"
                     ws.cell(row=row_num, column=col_num, value=value)
-
             wb.save(save_path)
             messagebox.showinfo("Başarılı", f"Veriler '{save_path}' dosyasına başarıyla aktarıldı.")
-            
             self.save_last_used_params()
-
         except Exception as e:
-            messagebox.showerror("Sen de benim hatalarımdan birisin", f"Bir hata oluştu: {e}")
+            messagebox.showerror("Hata", f"Bir hata oluştu: {e}")
         finally:
             conn.close()
 
     def check_for_updates(self):
-        current_version = "v1.0.1"
+        current_version = "v1.0.2"
         repo_url = "https://api.github.com/repos/2mdtln/DBxcel/releases/latest"
-        update_found = False
         try:
             response = requests.get(repo_url)
             if response.status_code == 200:
                 latest_release = response.json()
                 latest_version = latest_release['tag_name']
-
                 if latest_version != current_version:
                     update_msg = f"Yeni bir sürüm mevcut: {latest_version}. Güncellemek ister misiniz?"
                     if messagebox.askyesno("Güncelleme Bulundu", update_msg):
                         webbrowser.open(latest_release['html_url'])
-                    update_found = True
+                return False
         except Exception as e:
             print(f"Update check failed: {e}")
-        
-        return update_found
+        return False
 
 if __name__ == "__main__":
     root = tk.Tk()
