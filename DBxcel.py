@@ -6,6 +6,18 @@ import json
 import os
 import webbrowser
 import requests
+import subprocess
+import sys
+
+def install_libraries():
+    libraries = ["openpyxl", "requests"]
+    for lib in libraries:
+        try:
+            __import__(lib)
+        except ImportError:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
+
+install_libraries()
 
 class ExportApp:
     def __init__(self, root):
@@ -105,15 +117,12 @@ class ExportApp:
 
     def export_to_excel(self):
         self.table_name = self.table_entry.get()
-
         if not self.db_file or self.table_name == "Tablo adını girin":
             messagebox.showerror("Hata", "Lütfen bir veritabanı seçin ve tablo adını girin.")
             return
-
         save_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Dosyası", "*.xlsx")])
         if not save_path:
             return
-
         try:
             conn = sqlite3.connect(self.db_file)
             cursor = conn.cursor()
