@@ -25,6 +25,13 @@ class ExportApp:
         self.last_table_label.pack()
 
         self.table_entry = tk.Entry(root)
+
+        def clear_entry(event):
+            if event.widget.get() == "Tablo adını girin":
+                event.widget.delete(0, tk.END)
+
+        self.table_entry.bind("<FocusIn>", clear_entry)
+
         self.table_entry.insert(0, self.last_table if self.last_table else "Tablo adını girin")
         self.table_entry.pack()
 
@@ -51,7 +58,7 @@ class ExportApp:
         self.github_credit_2.pack(side=tk.LEFT, padx=5)
         self.github_credit_2.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/Restilov"))
 
-        self.version_label = tk.Label(root, text="v1.0.1", fg="black", font=("Helvetica", 8))
+        self.version_label = tk.Label(root, text="v1.0.2", fg="black", font=("Helvetica", 8))
         self.version_label.pack()
 
         self.db_file = self.last_db
@@ -101,10 +108,10 @@ class ExportApp:
             messagebox.showerror("Sen de benim hatalarımdan birisin", "Lütfen bir veritabanı seçin ve tablo adını girin.")
             return
 
-        save_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Dosyası", "*.xlsx")])
+        save_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[["Excel Dosyası", "*.xlsx"]])
+
         if not save_path:
             return
-
         try:
             conn = sqlite3.connect(self.db_file)
             cursor = conn.cursor()
@@ -131,7 +138,7 @@ class ExportApp:
 
             wb.save(save_path)
             messagebox.showinfo("Başarılı", f"Veriler '{save_path}' dosyasına başarıyla aktarıldı.")
-            
+
             self.save_last_used_params()
 
         except Exception as e:
@@ -140,7 +147,7 @@ class ExportApp:
             conn.close()
 
     def check_for_updates(self):
-        current_version = "v1.0.1"
+        current_version = "v1.0.2"
         repo_url = "https://api.github.com/repos/2mdtln/DBxcel/releases/latest"
         update_found = False
         try:
@@ -156,7 +163,7 @@ class ExportApp:
                     update_found = True
         except Exception as e:
             print(f"Update check failed: {e}")
-        
+
         return update_found
 
 if __name__ == "__main__":
