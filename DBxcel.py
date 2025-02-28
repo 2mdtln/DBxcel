@@ -6,20 +6,6 @@ import json
 import os
 import webbrowser
 import requests
-import subprocess
-import sys
-
-def install_libraries():
-    libraries = ["openpyxl", "requests"]
-    for lib in libraries:
-        try:
-            __import__(lib)
-        except ImportError:
-            print(f"{lib} kütüphanesi eksik. Yükleniyor...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
-            print(f"{lib} başarıyla yüklendi!")
-
-install_libraries()
 
 class ExportApp:
     def __init__(self, root):
@@ -35,8 +21,7 @@ class ExportApp:
         self.last_db_label = tk.Label(root, text=f"Son kullanılan DB: {self.last_db if self.last_db else 'Yok'}")
         self.last_db_label.pack()
 
-        self.last_table_label = tk.Label(root,
-                                         text=f"Son kullanılan Tablo: {self.last_table if self.last_table else 'Yok'}")
+        self.last_table_label = tk.Label(root, text=f"Son kullanılan Tablo: {self.last_table if self.last_table else 'Yok'}")
         self.last_table_label.pack()
 
         self.table_entry = tk.Entry(root)
@@ -59,8 +44,7 @@ class ExportApp:
         self.export_button = tk.Button(button_frame, text="Excel'e Aktar", command=self.export_to_excel)
         self.export_button.pack(side=tk.LEFT, padx=10)
 
-        self.credit_label = tk.Label(root, text="ASAL Kütüphanesi için yapılmıştır - Şubat 2025", fg="black",
-                                     font=("Helvetica", 10, "bold"))
+        self.credit_label = tk.Label(root, text="ASAL Kütüphanesi için yapılmıştır - Şubat 2025", fg="black", font=("Helvetica", 10, "bold"))
         self.credit_label.pack()
 
         github_frame = tk.Frame(root)
@@ -74,7 +58,7 @@ class ExportApp:
         self.github_credit_2.pack(side=tk.LEFT, padx=5)
         self.github_credit_2.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/Restilov"))
 
-        self.version_label = tk.Label(root, text="v1.0.1", fg="black", font=("Helvetica", 8))
+        self.version_label = tk.Label(root, text="v1.0.2", fg="black", font=("Helvetica", 8))
         self.version_label.pack()
 
         self.db_file = self.last_db
@@ -82,12 +66,6 @@ class ExportApp:
 
         self.root.geometry("350x150")
         self.root.resizable(False, False)
-
-        # Tabloya tıklandığında kaybolması için event ekleme
-        self.root.bind("<Button-1>", self.hide_table)
-
-    def hide_table(self, event):
-        self.last_table_label.pack_forget()
 
     def load_last_used_params(self):
         if os.path.exists("params.json"):
@@ -116,7 +94,7 @@ class ExportApp:
             print(f"Son kullanılan parametreleri kaydederken hata oluştu: {e}")
 
     def select_db_file(self):
-        file = filedialog.askopenfilename(filetypes=[["SQLite DB dosyaları", "*.db;*.db3"]])
+        file = filedialog.askopenfilename(filetypes=[("SQLite DB dosyaları", "*.db;*.db3")])
         if file:
             self.db_file = file
             self.last_db_label.config(text=f"Son kullanılan DB: {file}")
@@ -125,9 +103,9 @@ class ExportApp:
 
     def export_to_excel(self):
         self.table_name = self.table_entry.get()
+
         if not self.db_file or self.table_name == "Tablo adını girin":
-            messagebox.showerror("Sen de benim hatalarımdan birisin",
-                                 "Lütfen bir veritabanı seçin ve tablo adını girin.")
+            messagebox.showerror("Sen de benim hatalarımdan birisin", "Lütfen bir veritabanı seçin ve tablo adını girin.")
             return
 
         save_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[["Excel Dosyası", "*.xlsx"]])
